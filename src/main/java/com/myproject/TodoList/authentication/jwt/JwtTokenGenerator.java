@@ -9,11 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Component;
 
 import java.util.Base64;
 import java.util.Date;
 import java.util.List;
-
+@Component
 public class JwtTokenGenerator {
     private String secretKey = "keepyoursecretkeyinasafe";
     private long validTimeInMilliseconds = 3600000;  //same as an hour
@@ -25,17 +26,19 @@ public class JwtTokenGenerator {
         secretKey = Base64.getEncoder().encodeToString(secretKey.getBytes());
     }
     public String createToken(String username, List<String> roles){
+        String token;
         Claims claims = Jwts.claims().setSubject(username);
         claims.put("roles", roles);
         Date now = new Date();
         Date expiresAt = new Date(now.getTime() + validTimeInMilliseconds);
-        return Jwts
+        token = Jwts
                 .builder()
                 .setClaims(claims)
                 .setIssuedAt(now)
                 .setExpiration(expiresAt)
                 .signWith(SignatureAlgorithm.HS256, secretKey)
                 .compact();
+        return token;
     }
     public Authentication getAuthentication(String token){
         UserDetails userDetails = this.userDetailsServiceImpl.loadUserByUsername(getUsername(token));

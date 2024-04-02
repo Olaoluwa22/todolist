@@ -13,22 +13,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
+@Service
 public class UserServiceImpl implements UserService {
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
     @Autowired
-    AuthenticationManager authenticationManager;
+    private PasswordEncoder passwordEncoder;
     @Autowired
-    PasswordEncoder passwordEncoder;
+    private JwtTokenGenerator jwtTokenGenerator;
     @Autowired
-    JwtTokenGenerator jwtTokenGenerator;
+    private AuthenticationManager authenticationManager;
     @Override
-    public ResponseEntity<?> signup(UserSignUpRequestDTO userSignUpRequestDTO) {
+    public UserSignUpResponseDTO signup(UserSignUpRequestDTO userSignUpRequestDTO) {
         try{
             String username = userSignUpRequestDTO.getUsername();
             String password = userSignUpRequestDTO.getPassword();
@@ -39,19 +41,19 @@ public class UserServiceImpl implements UserService {
             User newUser = new User(username, passwordEncoder.encode(password));
             userRepository.save(newUser);
             String token = jwtTokenGenerator.createToken(newUser.getUsername(), newUser.getRoleAsList());
-            return new ResponseEntity<>(new UserSignUpResponseDTO(username, token), HttpStatus.OK);
+            return new UserSignUpResponseDTO(username, token);
         }catch(AuthenticationException exception){
             throw new BadCredentialsException("Invalid Username or Password");
         }
     }
     @Override
-    public ResponseEntity<?> signin(UserSignInRequestDTO userSignInRequestDTO) {
+    public UserSignInResponseDTO signin(UserSignInRequestDTO userSignInRequestDTO) {
         try {
             String username = userSignInRequestDTO.getUsername();
             String password = userSignInRequestDTO.getPassword();
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
             String token = jwtTokenGenerator.createToken(username, this.userRepository.findByUsername(username).getRoleAsList());
-            return new ResponseEntity<>(new UserSignInResponseDTO(username, token), HttpStatus.OK);
+            return new UserSignInResponseDTO(username, token);
         }catch (AuthenticationException exception){
             throw new BadCredentialsException("Invalid Username or Password");
         }

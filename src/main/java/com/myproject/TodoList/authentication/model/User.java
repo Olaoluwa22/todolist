@@ -7,10 +7,10 @@ import java.util.Arrays;
 import java.util.List;
 
 @Entity
-@Table(name= "User")
+@Table(name= "TodoListUser")
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     @NotEmpty
     @Column(unique = true)
